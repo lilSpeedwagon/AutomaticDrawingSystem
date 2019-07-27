@@ -10,6 +10,7 @@
 #include <QQueue>
 #include <QDebug>
 #include <QDomDocument>
+#include "logclient.h"
 
 #define SVG_BEGIN "<svg"
 #define PATH_BEGIN "<path"
@@ -38,8 +39,9 @@
 #define COORDS_CURVE 6
 
 class InvalidPathException : public std::exception  {};
+class InvalidFileException : public std::exception  {};
 
-class PointsThread : public QThread   {
+class PointsThread : public QThread, LogClient   {
     Q_OBJECT
 private:
     QQueue<QString> &pathStringsQueue;
@@ -56,16 +58,17 @@ signals:
     void finished();
 };
 
-class SVGProcessor : public QObject
+class SVGProcessor : public QObject, LogClient
 {
     Q_OBJECT
 private:
     static const unsigned THREAD_COUNT = 4;
 
     bool process(QFile in &file, PathsPtr out &pPaths);
-    bool extractPaths(QFile in &file, PathsPtr out &pPaths);
+    void extractPaths(QFile in &file, QQueue<QString> out &strQueue);
+    void sortPaths(PathsPtr &pPaths);
 
-    void runInThreads(QQueue<QString> in &strQueue, PathsPtr& out pPaths);
+    void runInThreads(QQueue<QString> in &strQueue, PathsPtr& out pPaths);        
 
 public:
     SVGProcessor();

@@ -5,8 +5,9 @@
 #include <QDebug>
 #include "scheduler.h"
 #include "svgprocessor.h"
+#include "logclient.h"
 
-class ADSCore : public QObject
+class ADSCore : public QObject, LogClient
 {
     Q_OBJECT
 
@@ -26,6 +27,7 @@ public slots:
 
 public:
     ADSCore(UIType uitype = Console);
+    virtual ~ADSCore();
     void setUI(UIType uitype);
 };
 

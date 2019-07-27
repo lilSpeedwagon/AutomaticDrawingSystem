@@ -6,6 +6,7 @@ PointsThread::PointsThread(QQueue<QString> in &pathStringsQueue, QMutex &pathStr
       dataStorage(dataStorage), storageMutex(storageMutex)
 {
     setParent(parent);
+    setName("Unknown thread");
 }
 
 /*
@@ -148,8 +149,12 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
     }
 }
 
-void PointsThread::run()    {
-    qDebug() << QThread::currentThreadId() << ": start thread";
+void PointsThread::run()    {    
+    void* threadPtr = QThread::currentThreadId();
+    setName("Thread " + Utils::toStr((qint64) threadPtr));
+
+    log("thread start");
+
     for (;;)    {
         pathStringsQueueMutex.lock();
         if (pathStringsQueue.empty())   {
@@ -170,12 +175,12 @@ void PointsThread::run()    {
             dataStorage->addPath(path);
             storageMutex.unlock();
         } catch (InvalidPathException&) {
-            qDebug() << QThread::currentThreadId() << ": invalid path string";
+            log("invalid path string");
         }
 
 
     }
-    qDebug() << QThread::currentThreadId() << ": finish thread";
+    log("finish thread");
     emit finished();
 }
 
@@ -211,16 +216,18 @@ void SVGProcessor::test()   {
 
 SVGProcessor::SVGProcessor()
 {
-
+    setName("SVGProcessor");
 }
 
 void SVGProcessor::runInThreads(QQueue<QString> &strQueue, PathsPtr& out paths)   {
+    log("running points extracting in " + Utils::toStr(THREAD_COUNT) + " threads");
+
     QMutex strQueueMutex, storageMutex;
     PointsThread **threads = new PointsThread*[THREAD_COUNT];
-    qDebug() << "running points extracting in " << THREAD_COUNT << " threads";
+
     for (unsigned i = 0; i < THREAD_COUNT; i++) {
         threads[i] = new PointsThread(strQueue, strQueueMutex, paths, storageMutex, this);
-        connect(threads[i], SIGNAL(finished()), threads[i], SLOT(deleteLater()));
+        connect(threads[i], &QThread::finished, threads[i], &QObject::deleteLater);
         threads[i]->start();
     }
 
@@ -228,15 +235,14 @@ void SVGProcessor::runInThreads(QQueue<QString> &strQueue, PathsPtr& out paths) 
         threads[i]->wait();
     }
     delete[] threads;
-    qDebug() << "multi thread processing finished.";
+    log("multi thread processing finished.");
 }
 
-bool SVGProcessor::extractPaths(QFile in &file, PathsPtr out &pPaths)  {
+void SVGProcessor::extractPaths(QFile in &file, QQueue<QString> out &strQueue)  {
     QDomDocument doc;
     if (doc.setContent(&file))  {
 
-        QString tags[TAG_COUNTER] = { PATH_TAG, POLYGON_TAG, POLYLINE_TAG };
-        QQueue<QString> pointStrings;
+        QString tags[TAG_COUNTER] = { PATH_TAG, POLYGON_TAG, POLYLINE_TAG };        
 
         for (int t = 0; t < TAG_COUNTER; t++)   {
             QDomNodeList pathNodes = doc.elementsByTagName(tags[t]);
@@ -244,30 +250,47 @@ bool SVGProcessor::extractPaths(QFile in &file, PathsPtr out &pPaths)  {
             for (int i = 0; i < pathNodes.size(); i++)    {
                 QDomElement path = pathNodes.at(i).toElement();
                 QString pointsStr = path.attribute(POINTS_ATTRIBUTE);
-                pointStrings.enqueue(pointsStr);
+                strQueue.enqueue(pointsStr);
             }
         }
-
-        int pathStrCount = pointStrings.size();
-
-        runInThreads(pointStrings, pPaths);
-        qDebug() << pPaths->size() << "/" << pathStrCount << " paths processed";
-
-        return true;
+    }   else {
+        throw InvalidFileException();
     }
-    return false;
+}
+
+void SVGProcessor::sortPaths(PathsPtr &pPaths)  {
+    log("paths sorting...");
+    //todo
+    log("sorting done");
 }
 
 bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
     bool result = true;
+    log("processing file \'" + file.fileName() + "\'...");
 
     if (file.open(QIODevice::ReadOnly)) {
-        qDebug() << "file opened";
-        extractPaths(file, pPaths);
+        log("file opened");
+        QQueue<QString> pointStrings;
+        try {
+            extractPaths(file, pointStrings);
+        } catch(InvalidFileException &)   {
+            log("Invalid file. Fault");
+            file.close();
+            return false;
+        }
         file.close();
-        qDebug() << "processing done";
+
+        int pathStrCount = pointStrings.size();
+        runInThreads(pointStrings, pPaths);
+
+        sortPaths(pPaths);
+
+        log(Utils::toStr(pPaths->size()) +  "/" + Utils::toStr(pathStrCount) + " paths processed");
+
+        log("processing done");
+
     }   else {
-        qDebug() << "file not opened. fault";
+        log("file not opened. Fault");
         result = false;
     }
 
@@ -283,15 +306,19 @@ void SVGProcessor::startTask(Task& task)  {
         bool processingResult = process(task.getFile(), pPaths);
         if (!processingResult)   {
             task.finish(Task::FAULT);
-            qDebug() << "task " << task.getFile().fileName() << " fault";
+            log("task " + task.getFile().fileName() + " fault");
             emit finished(task);
         }   else {
-            qDebug() << "drawing " << task.getFile().fileName();
-            emit draw(task, std::move(pPaths));          
+            log("drawing " + task.getFile().fileName());
+            emit draw(task, std::move(pPaths));
+            //to delete
+            task.finish(Task::SUCCESS);
+            emit finished(task);
+            //to delete
         }
 
 
     }   else {
-        qDebug() << "task already started. Cancel";
+        log("task already started. Cancel");
     }
 }

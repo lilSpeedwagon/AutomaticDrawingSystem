@@ -8,19 +8,25 @@
 #define in
 #define out
 
+#define interface
+
 //utility constants
 #define NOT_FOUND -1
 #define MINUS '-'
 
-class Utils {
-public:
+namespace Utils {
     //utility functions
 
-    static bool isCoord(QChar const &c)   {
+    template<typename T>
+    inline QString toStr(T value)  {
+        return QString::number(value);
+    }
+
+    inline bool isCoord(QChar const &c)   {
         return c == '.' || c.isDigit();
     }
 
-    static QString subStr(QString const& str, int from, int to)   {
+    inline QString subStr(QString const& str, int from, int to)   {
         int size = to - from + 2;
         if (size > 0)  {
             QChar* buffer = new QChar[static_cast<unsigned long long>(size)];
@@ -31,7 +37,7 @@ public:
         return QString();
     }
 
-    static int nextNotDigit(QString const& str, int offset)    {
+    inline int nextNotDigit(QString const& str, int offset)    {
         int i = (str[offset + 1] == MINUS) ? offset + 2 : offset + 1;
         for (; isCoord(str[i]); i++) {
             if (i >= str.size() - 1)
@@ -49,7 +55,7 @@ public:
         }
     };
 
-    static int skipSpaces(QString const& in str, int in offset) {
+    inline int skipSpaces(QString const& in str, int in offset) {
         while (offset < str.size() - 1 && str[offset + 1] == ' ') {   //skip spaces
             offset++;
         }
@@ -57,7 +63,7 @@ public:
     }
 
     template<int size>
-    static int stringToFloats(QString const& in str, int in offset, float out numbers[size]) {
+    inline int stringToFloats(QString const& in str, int in offset, float out numbers[size]) {
         int prevDel = skipSpaces(str, offset);
         int nextDel = prevDel;
 
@@ -82,7 +88,7 @@ public:
         return nextDel;
     }
 
-    static bool equals(QChar const& a, QChar const& b)    {         //not sensitive to register
+    inline bool equals(QChar const& a, QChar const& b)    {         //not sensitive to register
         return (a.toLower() == b.toLower());
     }
 

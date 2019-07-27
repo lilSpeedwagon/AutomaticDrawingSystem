@@ -3,6 +3,7 @@
 
 #include <QVector>
 #include <QDebug>
+#include <math.h>
 
 const float precisionFactor = 5;
 

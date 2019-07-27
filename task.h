@@ -6,7 +6,7 @@
 class Task
 {
 public:
-    enum Result { SUCESS, FILE_OPEN_ERROR, FAULT, NONE };
+    enum Result { SUCCESS, FAULT, NONE };
 
 private:
     unsigned long id;
