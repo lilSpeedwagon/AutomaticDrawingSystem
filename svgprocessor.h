@@ -81,7 +81,7 @@ signals:
 private slots:
 
 public slots:
-    void startTask(Task& task);
+    void executeTask(Task& task);
 };
 
 #endif // SVGPROCESSOR_H

@@ -45,24 +45,18 @@ struct Curve    {
 
 class Path : public QVector<Point> {
 public:
-    void operator<<(Point& point)   {
-        push_back(point);
-    }
+    void operator<<(Point& point);
+    void operator<<(Curve& curve);
 
-    void operator<<(Curve& curve)   {
-        int pointCount = static_cast<int>(curve.baseLength() * precisionFactor);
-        float t_step = 1.0f / pointCount;
-        float t = t_step;
-
-        //we skip first point because it's already contained in prev point (M) or curve (C)
-        for (int i = 1; i < pointCount; i++)    {
-            Point p = curve.begin * pow(1 - t, 3) + curve.p1 * 3 * pow(1 - t, 2) * t + curve.p2 * 3 * (1 - t) * pow(t, 2) + curve.end * pow(t, 3);
-            t += t_step;
-            push_back(p);
-        }
-    }
+    float pathLength() const;
+private:
+    float length;
 };
 
+
+/*
+ *Hint: use at() to read-only access (better performance than operator[])
+ */
 class Paths
 {
 private:
@@ -73,6 +67,9 @@ public:
     void removePath(int const& index);
     void clear();
     int size() const;
+
+    auto begin() -> decltype (paths.begin()) { return paths.begin(); }
+    auto end() -> decltype (paths.end()) { return paths.end(); }
 };
 
 typedef std::shared_ptr<Paths> PathsPtr;

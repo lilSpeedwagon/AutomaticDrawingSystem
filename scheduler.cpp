@@ -26,7 +26,8 @@ void Scheduler::process()  {
 
     while(isWorking) {
         if (!queue.empty()) {
-            Task nextTask = queue.dequeue();            
+            Task nextTask = queue.dequeue();
+            nextTask.start();
             executeTask(nextTask);
         } else {
             isWorking = false;

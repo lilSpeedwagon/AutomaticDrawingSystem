@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
     t.start();
 
     ADSCore core;
-    QFile file("C:\\Users\\ded_e\\Desktop\\hatake-kakashi(a4).svg");
+    QFile file("C:\\Users\\ded_e\\Desktop\\sketch_180903b\\data\\steinsS.svg");
     core.process(file);
 
     qDebug() << "4 thread time " << t.elapsed();

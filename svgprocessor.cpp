@@ -259,8 +259,17 @@ void SVGProcessor::extractPaths(QFile in &file, QQueue<QString> out &strQueue)  
 }
 
 void SVGProcessor::sortPaths(PathsPtr &pPaths)  {
+
+    for (Path& p : *pPaths) {
+        qDebug() << p.pathLength();
+    }
     log("paths sorting...");
-    //todo
+    qSort(pPaths->begin(), pPaths->end(), [] (Path A, Path B) { return A.pathLength() < B.pathLength(); });
+
+    for (Path& p : *pPaths) {
+        qDebug() << p.pathLength();
+    }
+
     log("sorting done");
 }
 
@@ -297,8 +306,8 @@ bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
     return result;
 }
 
-void SVGProcessor::startTask(Task& task)  {
-    if (!task.isStarted() && !task.isFinished())  {
+void SVGProcessor::executeTask(Task& task)  {
+    if (task.isStarted() && !task.isFinished())  {
         task.start();
 
         PathsPtr pPaths = std::make_shared<Paths>();
@@ -319,6 +328,6 @@ void SVGProcessor::startTask(Task& task)  {
 
 
     }   else {
-        log("task already started. Cancel");
+        log("invalid task. Fault");
     }
 }
