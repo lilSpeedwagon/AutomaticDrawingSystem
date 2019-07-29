@@ -2,10 +2,16 @@
 #define ADSCORE_H
 
 #include <QObject>
+#include <QQmlApplicationEngine>
 #include <QDebug>
+#include <QQmlContext>
 #include "scheduler.h"
 #include "svgprocessor.h"
 #include "logclient.h"
+#include "paths.h"
+#include "idrawer.h"
+#include "virtualdrawer.h"
+#include "drawcontroller.h"
 
 class ADSCore : public QObject, LogClient
 {
@@ -17,10 +23,12 @@ public:
 private:
     UIType uitype;
     Scheduler scheduler;
-    SVGProcessor processor;
+    SVGProcessor processor;    
+    DrawController controller;
 
-private slots:
-
+signals:
+    void signalDraw(Paths& paths);
+    void signalLog(QString const& str);
 
 public slots:
     void process(QFile &file);
@@ -29,6 +37,7 @@ public:
     ADSCore(UIType uitype = Console);
     virtual ~ADSCore();
     void setUI(UIType uitype);
+    void initGUI();
 };
 
 #endif // ADSCORE_H

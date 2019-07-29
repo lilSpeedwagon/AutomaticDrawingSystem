@@ -43,6 +43,8 @@ struct Curve    {
     }
 };
 
+class EmptyPathsException : public std::exception   {};
+
 class Path : public QVector<Point> {
 public:
     void operator<<(Point& point);
@@ -67,9 +69,13 @@ public:
     void removePath(int const& index);
     void clear();
     int size() const;
+    void scale(float scaleFactor);
+    const Path& at(int index) const;
 
     auto begin() -> decltype (paths.begin()) { return paths.begin(); }
     auto end() -> decltype (paths.end()) { return paths.end(); }
+
+    class OutOfBoundException : public std::exception {};
 };
 
 typedef std::shared_ptr<Paths> PathsPtr;

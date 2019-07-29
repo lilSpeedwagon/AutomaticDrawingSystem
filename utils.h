@@ -8,7 +8,7 @@
 #define in
 #define out
 
-#define interface
+#define interface struct
 
 //utility constants
 #define NOT_FOUND -1

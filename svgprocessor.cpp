@@ -259,17 +259,8 @@ void SVGProcessor::extractPaths(QFile in &file, QQueue<QString> out &strQueue)  
 }
 
 void SVGProcessor::sortPaths(PathsPtr &pPaths)  {
-
-    for (Path& p : *pPaths) {
-        qDebug() << p.pathLength();
-    }
     log("paths sorting...");
     qSort(pPaths->begin(), pPaths->end(), [] (Path A, Path B) { return A.pathLength() < B.pathLength(); });
-
-    for (Path& p : *pPaths) {
-        qDebug() << p.pathLength();
-    }
-
     log("sorting done");
 }
 
@@ -320,12 +311,7 @@ void SVGProcessor::executeTask(Task& task)  {
         }   else {
             log("drawing " + task.getFile().fileName());
             emit draw(task, std::move(pPaths));
-            //to delete
-            task.finish(Task::SUCCESS);
-            emit finished(task);
-            //to delete
         }
-
 
     }   else {
         log("invalid task. Fault");

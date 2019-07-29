@@ -44,3 +44,18 @@ void Paths::clear() {
 int Paths::size() const {
     return paths.size();
 }
+
+void Paths::scale(float scaleFactor)    {
+    for (Path &path : paths)    {
+        for (Point &point : path)   {
+            point.x *= scaleFactor;
+            point.y *= scaleFactor;
+        }
+    }
+}
+
+const Path& Paths::at(int index) const  {
+    if (index >= paths.size() || index < 0)
+        throw OutOfBoundException();
+    return paths.at(index);
+}
