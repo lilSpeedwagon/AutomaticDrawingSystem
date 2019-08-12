@@ -23,6 +23,7 @@ private:
 
     bool drawing = false;
     CurrentDrawing current;
+    void drawNextPoint();
 
 public:
     DrawController();
@@ -31,10 +32,10 @@ public:
 signals:
     void signalMoveTo(float x, float y);
     void signalDrawTo(float x, float y);
-    void signalFinish(Task& task);
+    void signalFinish(Task task);
 
 public slots:
-    void draw(Task& task, PathsPtr pPaths);
+    void draw(Task task, PathsPtr pPaths);
 
 private slots:
     void ready();

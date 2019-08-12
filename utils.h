@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QDebug>
+#include "paths.h"
 
 //classes and functions markers
 #define in
@@ -20,6 +21,10 @@ namespace Utils {
     template<typename T>
     inline QString toStr(T value)  {
         return QString::number(value);
+    }
+
+    inline QString toStr(Point p)  {
+        return QString::number(p.x) + ' ' + QString::number(p.y);
     }
 
     inline bool isCoord(QChar const &c)   {
@@ -73,15 +78,18 @@ namespace Utils {
                 nextDel = str.size();
             }
             QString numStr = subStr(str, prevDel + 1, nextDel - 1);
+            if (!numStr.isEmpty() && numStr[0] == '.')  {
+                numStr.insert(0, '0');      // for .123 -> 0.123
+            }
 
             bool result;
             numbers[i] = numStr.toFloat(&result);
             if (!result)    {
-                //qDebug() << "Invalid float in " << numStr;
                 throw InvalidFloatException(numStr);
             }
-            if (prevDel == '-')
+            if (str[prevDel] == '-') {
                 numbers[i] = -numbers[i];
+            }
 
             prevDel = skipSpaces(str, nextDel);
         }

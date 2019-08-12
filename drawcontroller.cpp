@@ -9,7 +9,7 @@ DrawController::DrawController()
     QObject::connect(&virtualDrawer, SIGNAL(signalReady()), this, SLOT(ready()));
 }
 
-void DrawController::draw(Task& task, PathsPtr pPaths)   {
+void DrawController::draw(Task task, PathsPtr pPaths)   {
     if (task.isStarted() && !task.isFinished())   {
         log("start drawing");
 
@@ -17,13 +17,16 @@ void DrawController::draw(Task& task, PathsPtr pPaths)   {
         drawing = true;
 
         try {
-            //search first not empry path
+            //search first not empty path
             while (!current.pPaths->at(current.pathIndex).size())    {
                 current.pathIndex++;
             }
             log("first not-empty path found");
 
-            ready();
+
+            while (drawing)    {
+                ready();
+            }
 
         } catch (Paths::OutOfBoundException& ) {
             log("empty paths. Cancel");
@@ -40,15 +43,20 @@ VirtualDrawer* DrawController::getVirtualDrawerPtr()   {
     return &virtualDrawer;
 }
 
+void DrawController::drawNextPoint()    {
+
+}
+
 void DrawController::ready()    {
     if (drawing)    {
-        try {
+        try {            
             const Point &p = current.pPaths->at(current.pathIndex).at(current.pointIndex);
+            log("drawing " + Utils::toStr(p));
             if (p.draw) {
-                signalDrawTo(p.x, p.y);
+                emit signalDrawTo(p.x, p.y);
             }   else    {
-                signalMoveTo(p.x, p.y);
-            }
+                emit signalMoveTo(p.x, p.y);
+            }                        
 
             current.pointIndex++;
 

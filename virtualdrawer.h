@@ -8,7 +8,6 @@
 class VirtualDrawer : public QObject, public IDrawer, LogClient
 {
     Q_OBJECT
-
 signals:
     void signalMoveTo(float x, float y);
     void signalDrawTo(float x, float y);

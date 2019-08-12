@@ -49,7 +49,7 @@ int Scheduler::tasksInQueue() const  {
     return queue.size();
 }
 
-void Scheduler::taskFinished(Task& task)    {
+void Scheduler::taskFinished(Task task)    {
     if (task.getResult() == Task::SUCCESS)  {
         success_counter++;
     }

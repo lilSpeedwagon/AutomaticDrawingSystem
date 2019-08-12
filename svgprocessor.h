@@ -19,6 +19,11 @@
 #define POINTS_END '\"'
 #define END '>'
 
+
+#define SVG_TAG "svg"
+#define VIEWBOX_ATTRIBUTE "viewBox"
+#define COORDS_VIEWBOX 4
+
 #define TAG_COUNTER 3
 #define PATH_TAG "path"
 #define POLYGON_TAG "polygon"
@@ -29,13 +34,18 @@
 #define POINTS_m 'm'
 #define POINTS_C 'C'
 #define POINTS_c 'c'
+#define POINTS_S 'S'
+#define POINTS_s 's'
 #define POINTS_L 'L'
+#define POINTS_l 'l'
 #define POINTS_H 'H'
+#define POINTS_h 'h'
 #define POINTS_V 'V'
 #define POINTS_Z 'Z'
 
 #define COORDS_LINE 1
 #define COORDS_POINT 2
+#define COORDS_CURVE_S 4
 #define COORDS_CURVE 6
 
 class InvalidPathException : public std::exception  {};
@@ -65,23 +75,25 @@ private:
     static const unsigned THREAD_COUNT = 4;
 
     bool process(QFile in &file, PathsPtr out &pPaths);
-    void extractPaths(QFile in &file, QQueue<QString> out &strQueue);
+    void extractPaths(QDomDocument in &doc, QQueue<QString> out &strQueue);
+    void extractImgSize(QDomDocument in &doc, ImgSize out &size);
     void sortPaths(PathsPtr &pPaths);
+    void scalePaths(PathsPtr &pPaths, ImgSize const& size);
 
-    void runInThreads(QQueue<QString> in &strQueue, PathsPtr& out pPaths);        
+    void runInThreads(QQueue<QString> in &strQueue, PathsPtr& out pPaths);
 
 public:
     SVGProcessor();
     void test();
 
 signals:
-    void finished(Task& task);
-    void draw(Task& task, PathsPtr paths);
+    void finished(Task task);
+    void draw(Task task, PathsPtr paths);
 
 private slots:
 
 public slots:
-    void executeTask(Task& task);
+    void executeTask(Task task);
 };
 
 #endif // SVGPROCESSOR_H

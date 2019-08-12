@@ -5,6 +5,10 @@ void Path::operator<<(Point& point)   {
         length += back().distantion(point);
 
     push_back(point);
+    if (point.x > maxSize.w)
+        maxSize.w = point.x;
+    if (point.y > maxSize.h)
+        maxSize.h = point.y;
 }
 
 void Path::operator<<(Curve& curve)   {
@@ -24,6 +28,10 @@ float Path::pathLength() const  {
     return length;
 }
 
+ImgSize Path::getMaxSize() const    {
+    return maxSize;
+}
+
 Paths::Paths()
 {
 
@@ -31,6 +39,12 @@ Paths::Paths()
 
 void Paths::addPath(Path &path) {
     paths.push_back(path);
+
+    ImgSize pathMaxSize = path.getMaxSize();
+    if (pathMaxSize.w > imgSize.w)
+        imgSize.w = pathMaxSize.w;
+    if (pathMaxSize.h > imgSize.h)
+        imgSize.h = pathMaxSize.h;
 }
 
 void Paths::removePath(int const& index)   {
@@ -46,12 +60,23 @@ int Paths::size() const {
 }
 
 void Paths::scale(float scaleFactor)    {
+    scale(scaleFactor, scaleFactor);
+}
+
+void Paths::scale(float wScaleFactor, float hScaleFactor)   {
     for (Path &path : paths)    {
         for (Point &point : path)   {
-            point.x *= scaleFactor;
-            point.y *= scaleFactor;
+            point.x *= wScaleFactor;
+            point.y *= hScaleFactor;
         }
     }
+}
+
+void Paths::scaleForScreen(const ImgSize &screenSize)   {
+    float scaleFactor = (screenSize.w < screenSize.h) ?
+                        screenSize.w / imgSize.w :
+                        screenSize.h / imgSize.h;
+    scale(scaleFactor, scaleFactor);
 }
 
 const Path& Paths::at(int index) const  {

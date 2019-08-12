@@ -10,7 +10,7 @@ public:
 
 private:
     unsigned long id;
-    QFile &file;
+    QFile file;
     bool started = false;
     bool finished = false;
     Result result = NONE;
@@ -18,7 +18,10 @@ private:
     static unsigned long idCounter;
 
 public:
-    Task(QFile &file);
+    Task() {}
+    Task(QFile const& file);
+    Task(Task const& task);
+    ~Task() {}
     void start();
     void finish(Result result);
     void cancel();
@@ -30,5 +33,6 @@ public:
 
     QFile& getFile();
 };
+Q_DECLARE_METATYPE(Task)
 
 #endif // TASK_H

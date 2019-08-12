@@ -6,10 +6,12 @@ VirtualDrawer::VirtualDrawer()  {
 }
 
 void VirtualDrawer::drawTo(float x, float y)    {
+    log("draw");
     emit signalDrawTo(x, y);
 }
 
 void VirtualDrawer::moveTo(float x, float y)    {
+    log("move");
     emit signalMoveTo(x, y);
 }
 

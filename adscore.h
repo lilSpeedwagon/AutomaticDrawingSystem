@@ -21,10 +21,16 @@ public:
     enum UIType { Console, GUI, Dashboard };
 
 private:
+    QQmlApplicationEngine engine;
     UIType uitype;
+
+    //threads
+    QThread controllerThread;
+
+    //components
     Scheduler scheduler;
-    SVGProcessor processor;    
-    DrawController controller;
+    SVGProcessor processor;
+    DrawController* controller;
 
 signals:
     void signalDraw(Paths& paths);
@@ -32,6 +38,7 @@ signals:
 
 public slots:
     void process(QFile &file);
+    void testProcess();
 
 public:
     ADSCore(UIType uitype = Console);

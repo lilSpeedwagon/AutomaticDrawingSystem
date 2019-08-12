@@ -4,8 +4,10 @@
 #include <QDebug>
 #include <QTime>
 
-void test() {
+void initMetaTypes()    {
 
+    int taskClassId = qRegisterMetaType<Task>();
+    int pathsPtrClassId = qRegisterMetaType<PathsPtr>();
 }
 
 int main(int argc, char *argv[])
@@ -14,17 +16,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication a(argc, argv);
 
-    //SVGProcessor proc;
-    //proc.test();
-
-    QTime t;
-    t.start();
-
-    ADSCore core;
-    QFile file("C:\\Users\\ded_e\\Desktop\\sketch_180903b\\data\\bot1.svg");
-    core.process(file);
-
-    qDebug() << "4 thread time " << t.elapsed();
+    ADSCore* core = new ADSCore();   
 
     return a.exec();
 }

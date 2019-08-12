@@ -22,7 +22,7 @@ public:
     int tasksInQueue() const;
 
 signals:
-    void executeTask(Task& task);
+    void executeTask(Task task);
 
 public slots:
     void start();
@@ -31,7 +31,7 @@ public slots:
     void removeTask();
     void clear();
 
-    void taskFinished(Task&);
+    void taskFinished(Task);
 };
 
 #endif // SCHEDULER_H
