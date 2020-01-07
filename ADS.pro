@@ -1,4 +1,4 @@
-QT += xml core gui qml quick
+QT += xml core gui qml quick serialport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += c++11
 # CONFIG -= app_bundle
@@ -16,11 +16,12 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     drawcontroller.cpp \
+    drawer.cpp \
     logclient.cpp \
         main.cpp \
     adscore.cpp \
-    scene.cpp \
     scheduler.cpp \
+    serialcontroller.cpp \
     task.cpp \
     svgprocessor.cpp \
     paths.cpp \
@@ -33,9 +34,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     drawcontroller.h \
+    drawer.h \
     idrawer.h \
     logclient.h \
-    scene.h \
+    serialcontroller.h \
     utils.h \
     adscore.h \
     scheduler.h \

@@ -41,11 +41,18 @@
 #define POINTS_H 'H'
 #define POINTS_h 'h'
 #define POINTS_V 'V'
+#define POINTS_A 'A'
+#define POINTS_a 'a'
+#define POINTS_Q 'Q'
+#define POINTS_q 'q'
+#define POINTS_T 'T'
+#define POINTS_t 't'
 #define POINTS_Z 'Z'
 
 #define COORDS_LINE 1
 #define COORDS_POINT 2
 #define COORDS_CURVE_S 4
+#define COORDS_BCURVE 4
 #define COORDS_CURVE 6
 
 class InvalidPathException : public std::exception  {};

@@ -15,7 +15,9 @@ PointsThread::PointsThread(QQueue<QString> in &pathStringsQueue, QMutex &pathStr
 */
 void PointsThread::extractPoints(const QString &str, Path &path) const  {
     int currentPos = 0;
-    Point beginPoint, lastPoint, lastBasePoint;
+    Point beginPoint, lastPoint, lastBasePointC, lastBasePointBC;
+    QChar prevPointType;
+
     while (currentPos < str.length() && currentPos != NOT_FOUND)   {
         if (Utils::equals(str[currentPos], POINTS_M))    {
             float nums[COORDS_POINT];
@@ -36,12 +38,14 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
             beginPoint = lastPoint = p;
             path << p;
             currentPos = newPos;
+            prevPointType = POINTS_M;
             continue;
         }
 
         if (Utils::equals(str[currentPos], POINTS_C))    {
             float nums[COORDS_CURVE];
             int newPos;
+
             try {
                 newPos = Utils::stringToFloats<COORDS_CURVE>(str, currentPos, nums);
             } catch (Utils::InvalidFloatException&) {
@@ -62,22 +66,25 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
 
             path << c;
             lastPoint = p;
-            lastBasePoint = base2;
+            lastBasePointC = base2;
             currentPos = newPos;
+            prevPointType = POINTS_C;
             continue;
         }
 
         if (Utils::equals(str[currentPos], POINTS_S))    {
             float nums[COORDS_CURVE_S];
             int newPos;
+
             try {
                 newPos = Utils::stringToFloats<COORDS_CURVE_S>(str, currentPos, nums);
             } catch (Utils::InvalidFloatException&) {
                 throw InvalidPathException();
             }
 
-            lastBasePoint.reflect(lastPoint);
             Point base2 = { nums[0], nums[1] };
+            Point base1 = (Utils::equals(prevPointType, POINTS_S) || Utils::equals(prevPointType, POINTS_C)) ?
+                lastBasePointC.reflect(lastPoint) : base2;
             Point p = { nums[2], nums[3] };
 
             if (str[currentPos].isLower())  {
@@ -85,12 +92,13 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
                 p += lastPoint;
             }
 
-            Curve c = { lastPoint, lastBasePoint, base2, p };
+            Curve c = { lastPoint, base1, base2, p };
 
             path << c;
             lastPoint = p;
-            lastBasePoint = base2;
+            lastBasePointC = base2;
             currentPos = newPos;
+            prevPointType = POINTS_S;
             continue;
         }
 
@@ -112,6 +120,7 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
             lastPoint = p;
             path << p;
             currentPos = newPos;
+            prevPointType = POINTS_L;
             continue;
         }
 
@@ -133,6 +142,7 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
             lastPoint = p;
             path << lastPoint;
             currentPos = newPos;
+            prevPointType = POINTS_V;
             continue;
         }
 
@@ -154,6 +164,68 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
             lastPoint = p;
             path << lastPoint;
             currentPos = newPos;
+            prevPointType = POINTS_H;
+            continue;
+        }
+
+        if (Utils::equals(str[currentPos], POINTS_Q))   {
+            float nums[COORDS_BCURVE];
+            int newPos;
+            try {
+                newPos = Utils::stringToFloats<COORDS_BCURVE>(str, currentPos, nums);
+            } catch (Utils::InvalidFloatException&) {
+                throw InvalidPathException();
+            }
+
+            Point base = { nums[0], nums[1] };
+            Point p = { nums[1], nums[2] };
+
+            if (str[currentPos].isLower())  {
+                base += lastPoint;
+                p += lastPoint;
+            }
+
+            BCurve c = { lastPoint, base, p };
+
+            path << c;
+            lastPoint = p;
+            lastBasePointBC = base;
+            currentPos = newPos;
+            prevPointType = POINTS_Q;
+            continue;
+        }
+
+        if (Utils::equals(str[currentPos], POINTS_T))   {
+            float nums[COORDS_BCURVE];
+            int newPos;
+            try {
+                newPos = Utils::stringToFloats<COORDS_BCURVE>(str, currentPos, nums);
+            } catch (Utils::InvalidFloatException&) {
+                throw InvalidPathException();
+            }
+
+            Point p = { nums[1], nums[2] };
+            Point base = (Utils::equals(prevPointType, POINTS_Q) || Utils::equals(prevPointType, POINTS_T)) ?
+                lastBasePointBC.reflect(lastPoint) : p;
+
+            if (str[currentPos].isLower())  {
+                base += lastPoint;
+                p += lastPoint;
+            }
+
+            BCurve c = { lastPoint, base, p };
+
+            path << c;
+            lastPoint = p;
+            lastBasePointBC = base;
+            currentPos = newPos;
+            prevPointType = POINTS_T;
+            continue;
+        }
+
+        if (Utils::equals(str[currentPos], POINTS_A))   {
+            //todo
+            prevPointType = POINTS_A;
             continue;
         }
 
@@ -162,6 +234,7 @@ void PointsThread::extractPoints(const QString &str, Path &path) const  {
             path << beginPoint;
             lastPoint = beginPoint;
             currentPos++;
+            prevPointType = POINTS_Z;
             continue;
         }
 
@@ -193,10 +266,8 @@ void PointsThread::run()    {
             dataStorage->addPath(path);
             storageMutex.unlock();
         } catch (InvalidPathException&) {
-            log("invalid path string");
+            logError("invalid path string");
         }
-
-
     }
     log("finish thread");
     emit finished();
@@ -276,7 +347,7 @@ void SVGProcessor::sortPaths(PathsPtr &pPaths)  {
     log("sorting done");
 }
 
-void SVGProcessor::scalePaths(PathsPtr &pPaths, ImgSize const& size) {
+/*void SVGProcessor::scalePaths(PathsPtr &pPaths, ImgSize const& size) {
     // test value
     ImgSize testSize = {800.0, 600.0};
     /////////////
@@ -289,7 +360,7 @@ void SVGProcessor::scalePaths(PathsPtr &pPaths, ImgSize const& size) {
             point.y *= scaleFactorY;
         }
     }
-}
+}*/
 
 bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
     bool result = true;
@@ -311,7 +382,7 @@ bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
 
             extractPaths(doc, pointStrings);
         } catch (InvalidFileException&) {
-            log("Invalid file. Fault");
+            logError("Invalid file. Fault");
             file.close();
             return false;
         }
@@ -319,7 +390,8 @@ bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
         int pathStrCount = pointStrings.size();
         runInThreads(pointStrings, pPaths);
 
-        sortPaths(pPaths);
+        pPaths->moveToZero();
+        pPaths->sort();
         pPaths->scaleForScreen( { 800.0f, 600.0f } );
 
         log(Utils::toStr(pPaths->size()) +  "/" + Utils::toStr(pathStrCount) + " paths processed");
@@ -327,7 +399,7 @@ bool SVGProcessor::process(QFile in &file, PathsPtr out &pPaths)   {
         log("processing done");
 
     }   else {
-        log("file not opened. Fault");
+        logError("file not opened. Fault");
         result = false;
     }
 
@@ -343,7 +415,7 @@ void SVGProcessor::executeTask(Task task)  {
         bool processingResult = process(task.getFile(), pPaths);
         if (!processingResult)   {
             task.finish(Task::FAULT);
-            log("task " + task.getFile().fileName() + " fault");
+            logError("task " + task.getFile().fileName() + " fault");
             emit finished(task);
         }   else {
             log("drawing " + task.getFile().fileName());
@@ -353,6 +425,6 @@ void SVGProcessor::executeTask(Task task)  {
         }
 
     }   else {
-        log("invalid task. Fault");
+        logError("invalid task. Fault");
     }
 }

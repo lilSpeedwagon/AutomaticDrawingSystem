@@ -1,5 +1,8 @@
 #include "logclient.h"
 
+const QString LogClient::errorStr = "Error. ";
+const QString LogClient::warnStr = "Warning. ";
+
 LogClient::LogClient(QString logName) : logName(logName), logNameWithColon(' ' + logName + ": ")
 {
 }
@@ -15,6 +18,14 @@ QString LogClient::name() const {
 
 void LogClient::log(QString const& message) const {
     qDebug().noquote() << getTimeStr() + logNameWithColon + message;
+}
+
+void LogClient::logError(const QString &message) const {
+    qDebug().noquote() << getTimeStr() + logNameWithColon + errorStr + message;
+}
+
+void LogClient::logWarn(const QString &message) const {
+    qDebug().noquote() << getTimeStr() + logNameWithColon + warnStr + message;
 }
 
 QString LogClient::getTimeStr() {

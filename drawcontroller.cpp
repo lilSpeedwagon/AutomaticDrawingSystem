@@ -4,9 +4,14 @@ DrawController::DrawController()
 {
     setName("DrawController");
     log("draw controller init");
+
+    QObject::connect(this, SIGNAL(signalMoveTo(float, float)), &realDrawer, SLOT(moveTo(float, float)));
+    QObject::connect(this, SIGNAL(signalDrawTo(float, float)), &realDrawer, SLOT(drawTo(float, float)));
+    QObject::connect(&realDrawer, SIGNAL(signalReady()), this, SLOT(ready()));
+    QObject::connect(&realDrawer, SIGNAL(signalError(QString const&)), this, SLOT(error(QString const&)));
+
     QObject::connect(this, SIGNAL(signalMoveTo(float, float)), &virtualDrawer, SLOT(moveTo(float, float)));
     QObject::connect(this, SIGNAL(signalDrawTo(float, float)), &virtualDrawer, SLOT(drawTo(float, float)));
-    QObject::connect(&virtualDrawer, SIGNAL(signalReady()), this, SLOT(ready()));
 }
 
 void DrawController::draw(Task task, PathsPtr pPaths)   {
@@ -23,10 +28,7 @@ void DrawController::draw(Task task, PathsPtr pPaths)   {
             }
             log("first not-empty path found");
 
-
-            while (drawing)    {
-                ready();
-            }
+            ready();
 
         } catch (Paths::OutOfBoundException& ) {
             log("empty paths. Cancel");
@@ -34,17 +36,13 @@ void DrawController::draw(Task task, PathsPtr pPaths)   {
         }
 
     }   else {
-        log("invalid task. Fault");
+        logError("invalid task. Fault");
         task.finish(Task::FAULT);
     }
 }
 
 VirtualDrawer* DrawController::getVirtualDrawerPtr()   {
     return &virtualDrawer;
-}
-
-void DrawController::drawNextPoint()    {
-
 }
 
 void DrawController::ready()    {
@@ -60,8 +58,11 @@ void DrawController::ready()    {
 
             current.pointIndex++;
 
-            while (current.pointIndex >= current.pPaths->at(current.pathIndex).size())   {
-                current.pathIndex++;
+            if (current.pointIndex >= current.pPaths->at(current.pathIndex).size())   {
+                current.pointIndex = 0;
+                do {
+                    current.pathIndex++;
+                } while(current.pPaths->at(current.pathIndex).empty());
             }
         } catch (Paths::OutOfBoundException&) {
             log("Paths end reached. Finish drawing.");
@@ -70,4 +71,18 @@ void DrawController::ready()    {
             emit signalFinish(*current.task);
         }
     }
+}
+
+void DrawController::cancel()   {
+    logError("Drawing was cancelled");
+    drawing = false;
+    current.task->finish(Task::CANCEL);
+    emit signalFinish(*current.task);
+}
+
+void DrawController::error(QString const& err)  {
+    logError("Drawing was stopped due an error. Error details: " + err);
+    drawing = false;
+    current.task->finish(Task::FAULT);
+    emit signalFinish(*current.task);
 }

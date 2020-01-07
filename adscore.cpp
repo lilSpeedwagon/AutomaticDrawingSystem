@@ -31,7 +31,7 @@ ADSCore::~ADSCore() {
 }
 
 void ADSCore::testProcess() {
-    QFile file("C:\\Users\\ded_e\\Desktop\\sketch_180903b\\data\\darthvader.svg");
+    QFile file("C:\\Users\\ded_e\\Desktop\\sketch_180903b\\data\\tiki.svg");
     process(file);
 }
 
@@ -46,7 +46,7 @@ void ADSCore::initGUI() {
     engine.rootContext()->setContextProperty("VirtualDrawer", controller->getVirtualDrawerPtr());
     engine.load(QUrl(QStringLiteral("qrc:/Main.qml")));
     if (engine.rootObjects().isEmpty()) {
-        log("Error while loading QML GUI engine. Terminating...");
+        logError("Error while loading QML GUI engine. Terminating...");
         exit(1);
     }
 }

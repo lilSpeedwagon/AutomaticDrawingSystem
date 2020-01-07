@@ -42,7 +42,6 @@ ApplicationWindow {
     }
 
     function ready()    {
-        console.log('ready');
         VirtualDrawer.ready();
     }
 
@@ -81,33 +80,11 @@ ApplicationWindow {
         property bool currentDraw: false
         property bool pathOpened: false
 
-        WorkerScript    {
-            id: drawer
-            onMessage: {
-                if (canvas.available)   {
-                    var ctx = canvas.getContext('2d');
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#8080F0';
-                    console.log("paint");
-
-                    if (!currentDraw)   {
-                        moveTo(ctx, currentX, currentY);
-                    }   else    {
-                        drawTo(ctx, currentX, currentY);
-                    }
-                    requestPaint();
-                }   else    {
-                    console.log("canvas is unavaliable");
-                }
-            }
-        }
-
         function drawCurrentPoint()    {
             if (canvas.available)   {
                 var ctx = canvas.getContext('2d');
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = '#8080F0';
-                console.log("paint");
 
                 if (!currentDraw)   {
                     moveTo(ctx, currentX, currentY);

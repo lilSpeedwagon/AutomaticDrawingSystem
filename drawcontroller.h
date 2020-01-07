@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "logclient.h"
 #include "virtualdrawer.h"
+#include "drawer.h"
 
 class DrawController : public QObject, LogClient
 {
@@ -19,11 +20,10 @@ private:
     };
 
     VirtualDrawer virtualDrawer;
-    //IDrawer realDriwer;
+    Drawer realDrawer;
 
     bool drawing = false;
     CurrentDrawing current;
-    void drawNextPoint();
 
 public:
     DrawController();
@@ -36,6 +36,8 @@ signals:
 
 public slots:
     void draw(Task task, PathsPtr pPaths);
+    void cancel();
+    void error(QString const& err);
 
 private slots:
     void ready();

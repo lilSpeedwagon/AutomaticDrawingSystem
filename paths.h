@@ -6,11 +6,26 @@
 #include <math.h>
 
 const float precisionFactor = 1;
+const float scaleBordersFactor = 0.8f;
 
 struct ImgSize   {
     float w, h;
+    ImgSize operator*(float const& f) const {
+        return { w * f, h *f };
+    }
 };
 Q_DECLARE_METATYPE(ImgSize)
+
+struct ImgBorders   {
+    float minW, minH, maxW, maxH;
+    ImgBorders() : minW(0.0f), minH(0.0f), maxW(0.0f), maxH(0.0f) {}
+    ImgBorders(ImgBorders const& b) : minW(b.minW), minH(b.minH), maxW(b.maxW), maxH(b.maxH) {}
+    void operator=(ImgBorders const& b) {
+        minW = b.minW; minH = b.minH;
+        maxW = b.maxW; maxH = b.maxH;
+    }
+};
+Q_DECLARE_METATYPE(ImgBorders)
 
 struct Point {
     float x = 0;
@@ -20,9 +35,8 @@ struct Point {
     Point(float x, float y, bool draw = true) :
         x(x), y(y), draw(draw) {}
 
-    void reflect(Point const& base) {
-        x = 2 * base.x - x;
-        y = 2 * base.y - y;
+    Point reflect(Point const& base) {
+        return { 2 * base.x - x, 2 * base.y - y, true };
     }
 
     Point operator*(float const& f)    {
@@ -40,6 +54,11 @@ struct Point {
     void operator+=(Point const& p)  {
         x += p.x;
         y += p.y;
+    }
+
+    void operator*=(float const& f) {
+        x *= f;
+        y *= f;
     }
 
     float distantion(Point const& p) const   {
@@ -60,18 +79,30 @@ struct Curve    {
 };
 Q_DECLARE_METATYPE(Curve)
 
+struct BCurve    {
+    Point begin;
+    Point p;
+    Point end;
+
+    float baseLength() const {
+        return begin.distantion(p) + p.distantion(end);
+    }
+};
+Q_DECLARE_METATYPE(BCurve)
+
 class EmptyPathsException : public std::exception   {};
 
 class Path : public QVector<Point> {
 public:
     void operator<<(Point& point);
     void operator<<(Curve& curve);
+    void operator<<(BCurve& curve);
 
     float pathLength() const;
-    ImgSize getMaxSize() const;
+    ImgBorders getBorders() const;
 private:
     float length;
-    ImgSize maxSize;
+    ImgBorders borders;
 };
 Q_DECLARE_METATYPE(Path)
 
@@ -82,16 +113,19 @@ class Paths
 {
 private:
     QVector<Path> paths;
-    ImgSize imgSize;
+    ImgBorders imgBorders;
 public:
     Paths();
     void addPath(Path &points);
     void removePath(int const& index);
     void clear();
     int size() const;
+    void moveToZero();
     void scale(float scaleFactor);
     void scale(float wScaleFactor, float hScaleFactor);
     void scaleForScreen(ImgSize const& screenSize);
+    void sort();
+    std::pair<float, float> getImgSize() const;
     const Path& at(int index) const;
 
     auto begin() -> decltype (paths.begin()) { return paths.begin(); }
